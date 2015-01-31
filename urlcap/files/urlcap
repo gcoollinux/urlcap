@@ -1,0 +1,67 @@
+#!/bin/sh /etc/rc.common
+
+START=65
+
+# 获取状态 杀进程
+EXTRA_COMMANDS="status"
+EXTRA_HELP="        status Print the status of the service"
+
+
+
+# 导入CONFIG配置参数并写入 /etc/urlcap.conf 先杀进程然后检测urlcap是否开启
+config_load()
+{
+mv /etc/urlcap.conf /etc/urlcap.conf.bak
+ftp_host=$(uci get urlcap.@urlcap[0].ftp_host)
+ftp_pwd=$(uci get urlcap.@urlcap[0].ftp_pwd) 
+ftp_user=$(uci get urlcap.@urlcap[0].ftp_user)
+ftp_password=$(uci get urlcap.@urlcap[0].ftp_password) 
+hosts=$(uci get urlcap.@urlcap[0].hosts) 
+interface=$(uci get urlcap.@urlcap[0].interface) 
+city=$(uci get urlcap.@urlcap[0].city) 
+company=$(uci get urlcap.@urlcap[0].company) 
+userdefine=$(uci get urlcap.@urlcap[0].userdefine) 
+enable=$(uci get urlcap.@urlcap[0].enable) 
+        
+# 将数值赋给urlcap官方的配置参数               
+echo "
+ftp_host=$ftp_host
+ftp_pwd=$ftp_pwd
+ftp_user=$ftp_user
+ftp_password=$ftp_password
+hosts=$hosts
+interface=$interface
+city=$city
+company=$company
+userdefine=$userdefine
+enable=$enable
+" >> /etc/urlcap.conf
+}
+
+# 官方的启动进程命令 利用此处 先导入参数然后进行开启或禁用等    
+start() {	
+	if (pgrep "^urlcap" 1>/dev/null 2>&1 )
+	then
+		echo "urlcap is running"
+		return 0
+	fi
+	config_load
+	/usr/bin/urlcap
+}
+
+stop() {
+	killall urlcap	>/dev/null 2>&1
+}
+
+status() {
+	if (pgrep "^urlcap" 1>/dev/null 2>&1 )
+	then
+		echo "urlcap is running"
+		return 0
+	elf	
+		echo "urlcap is not running"
+		return 1
+	fi
+	
+}
+
